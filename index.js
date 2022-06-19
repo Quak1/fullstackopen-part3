@@ -31,6 +31,11 @@ const generateId = () => {
   return maxId + 1;
 };
 
+const duplicateName = (name) => {
+  name = name.toLowerCase();
+  return persons.some((p) => p.name.toLowerCase() === name);
+};
+
 app.get("/api/persons", (req, res) => {
   res.json(persons);
 });
@@ -55,19 +60,29 @@ app.delete("/api/persons/:id", (req, res) => {
 
 app.post("/api/persons", (req, res) => {
   const person = req.body;
-  console.log(req);
-  console.log(person);
 
   if (!person) {
     return res.status(400).json({
       error: "content missing",
     });
+  } else if (!("name" in person) || person.name.length < 1) {
+    return res.status(400).json({
+      error: "name missing",
+    });
+  } else if (!("number" in person) || person.number.length < 1) {
+    return res.status(400).json({
+      error: "number missing",
+    });
+  } else if (duplicateName(person.name)) {
+    return res.status(400).json({
+      error: "name must be unique",
+    });
   }
 
   const newPerson = {
+    id: generateId(),
     name: person.name,
     number: person.number,
-    id: generateId(),
   };
 
   persons = persons.concat(newPerson);
