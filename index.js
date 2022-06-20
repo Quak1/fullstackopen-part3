@@ -15,6 +15,7 @@ const tinyData =
 app.use(express.json());
 app.use(morgan(tinyData));
 app.use(cors());
+app.use(express.static("build"));
 
 let persons = [
   {
