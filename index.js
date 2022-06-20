@@ -21,43 +21,28 @@ app.use(morgan(tinyData));
 app.use(cors());
 app.use(express.static("build"));
 
-const generateId = () => {
-  const maxId = persons.length > 0 ? Math.max(...persons.map((p) => p.id)) : 0;
-  return maxId + 1;
-};
-
-const duplicateName = (name) => {
-  name = name.toLowerCase();
-  return persons.some((p) => p.name.toLowerCase() === name);
-};
-
 app.get("/api/persons", (req, res) => {
   Person.find({}).then((persons) => {
     res.json(persons);
   });
 });
 
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   Person.findById(req.params.id)
     .then((person) => {
-      if (!person) res.status(404).json({ error: "person not found" });
+      if (!person) return res.status(404).json({ error: "person not found" });
       res.json(person);
     })
-    .catch((e) => {
-      res.status(400).json({
-        error: "person not found",
-      });
-    });
+    .catch((e) => next(e));
 });
 
-app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  persons = persons.filter((p) => p.id !== id);
-
-  res.status(204).end();
+app.delete("/api/persons/:id", (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+    .then(() => res.status(204).end())
+    .catch((e) => next(e));
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const person = req.body;
 
   if (!person) {
@@ -89,7 +74,7 @@ app.post("/api/persons", (req, res) => {
     .then((person) => {
       res.json(person);
     })
-    .catch((e) => console.log(e));
+    .catch((e) => next(e));
 });
 
 app.get("/info", (req, res) => {
@@ -99,6 +84,18 @@ app.get("/info", (req, res) => {
       `<div>${time}</div>`
   );
 });
+
+const errorHandler = (e, req, res, next) => {
+  console.error(e.message);
+
+  if (e.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" });
+  } else {
+    console.log("error ----------------------------");
+  }
+  next(e);
+};
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
