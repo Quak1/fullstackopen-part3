@@ -58,6 +58,7 @@ app.post("/api/persons", (req, res, next) => {
       error: "number missing",
     });
   }
+  // TODO: check for duplicates in backend
 
   const newPerson = new Person({
     name: person.name,
@@ -66,9 +67,7 @@ app.post("/api/persons", (req, res, next) => {
 
   newPerson
     .save()
-    .then((person) => {
-      res.json(person);
-    })
+    .then((person) => res.json(person))
     .catch((e) => next(e));
 });
 
@@ -96,6 +95,11 @@ app.get("/info", (req, res) => {
     )
   );
 });
+
+const unknownRoute = (req, res) => {
+  res.status(404).end();
+};
+app.use(unknownRoute);
 
 const errorHandler = (e, req, res, next) => {
   console.error(e.message);
