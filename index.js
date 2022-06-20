@@ -49,20 +49,15 @@ app.post("/api/persons", (req, res, next) => {
     return res.status(400).json({
       error: "content missing",
     });
-  } else if (!("name" in person) || person.name.length < 1) {
+  } else if (!person.name) {
     return res.status(400).json({
       error: "name missing",
     });
-  } else if (!("number" in person) || person.number.length < 1) {
+  } else if (!person.number) {
     return res.status(400).json({
       error: "number missing",
     });
   }
-  // else if (duplicateName(person.name)) {
-  //   return res.status(400).json({
-  //     error: "name must be unique",
-  //   });
-  // }
 
   const newPerson = new Person({
     name: person.name,
@@ -77,11 +72,28 @@ app.post("/api/persons", (req, res, next) => {
     .catch((e) => next(e));
 });
 
+app.put("/api/persons/:id", (req, res, next) => {
+  const person = req.body;
+
+  if (!person) return res.status(400).json({ error: "content missing" });
+
+  const updatedPerson = {
+    name: person.name,
+    number: person.number,
+  };
+
+  Person.findByIdAndUpdate(req.params.id, updatedPerson, { new: true })
+    .then((p) => res.json(p))
+    .catch((e) => next(e));
+});
+
 app.get("/info", (req, res) => {
   const time = new Date();
-  res.send(
-    `<div>Phonebook has info for ${persons.length} people</div>` +
-      `<div>${time}</div>`
+  Person.find({}).then((persons) =>
+    res.send(
+      `<div>Phonebook has info for ${persons.length} people</div>` +
+        `<div>${time}</div>`
+    )
   );
 });
 
