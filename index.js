@@ -7,7 +7,7 @@ const Person = require("./models/person");
 const app = express();
 
 // prints received data to logs
-morgan.token("data", (req, res) => {
+morgan.token("data", (req) => {
   if (req.method === "POST") {
     return JSON.stringify(req.body);
   }
